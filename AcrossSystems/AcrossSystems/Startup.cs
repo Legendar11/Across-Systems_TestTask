@@ -1,11 +1,14 @@
 ﻿using DatabaseRepository.Factories.ContextFactory;
 using DatabaseRepository.Repositories;
 using DatabaseRepository.Repositories.Interfaces;
+using JavaScriptEngineSwitcher.ChakraCore;
+using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using React.AspNet;
 
 namespace AcrossSystems
 {
@@ -22,14 +25,21 @@ namespace AcrossSystems
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMemoryCache();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddReact();
+            services.AddJsEngineSwitcher(options => 
+                options.DefaultEngineName = ChakraCoreJsEngine.EngineName).AddChakraCore();
+
             services.AddScoped<IRepositoryContextFactory, RepositoryContextFactory>();
             var connectionString = AppConfiguration["ConnectionStrings:DefaultConnection"];
             services.AddScoped<IArticleRepository>(provider => new ArticleRepository(
                     connectionString,
                     provider.GetService<IRepositoryContextFactory>()));
+
+            services.AddMvc();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -37,9 +47,15 @@ namespace AcrossSystems
                 app.UseDeveloperExceptionPage();
             }
 
-            app.Run(async (context) =>
+            app.UseReact(config => { });
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+            
+            app.UseMvc(routes =>
             {
-                await context.Response.WriteAsync("Hello World!");
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller}/{action}/{id?}");
             });
         }
     }
