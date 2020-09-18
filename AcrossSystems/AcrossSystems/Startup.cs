@@ -1,20 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using DatabaseRepository.Factories.ContextFactory;
+using DatabaseRepository.Repositories;
+using DatabaseRepository.Repositories.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AcrossSystems
 {
     public class Startup
     {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        public IConfiguration AppConfiguration { get; }
+
+        public Startup()
+        {
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json");
+            AppConfiguration = builder.Build();
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<IRepositoryContextFactory, RepositoryContextFactory>();
+            var connectionString = AppConfiguration["ConnectionStrings:DefaultConnection"];
+            services.AddScoped<IArticleRepository>(provider => new ArticleRepository(
+                    connectionString,
+                    provider.GetService<IRepositoryContextFactory>()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

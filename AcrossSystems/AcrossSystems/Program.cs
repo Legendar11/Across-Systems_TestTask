@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using DatabaseRepository.Factories.ContextFactory;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 
 namespace AcrossSystems
 {
@@ -14,7 +11,23 @@ namespace AcrossSystems
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            var host = BuildWebHost(args);
+
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json");
+            var config = builder.Build();
+
+            using (var scope = host.Services.CreateScope()) 
+            {
+                var services = scope.ServiceProvider;
+
+                var factory = services.GetRequiredService<IRepositoryContextFactory>();
+
+                factory.CreateDbContext(config.GetConnectionString("DefaultConnection")).Database.Migrate();
+            }
+
+            host.Run();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>

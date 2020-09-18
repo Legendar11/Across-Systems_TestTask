@@ -6,3 +6,7 @@
 /AcrossSystems/AcrossSystems/obj
 /.vs
 /AcrossSystems/.vs/AcrossSystems/v15
+/AcrossSystems/.vs/AcrossSystems/DesignTimeBuild
+/AcrossSystems/AcrossSystems/bin/Debug/netcoreapp2.0
+/AcrossSystems/DatabaseRepository/bin/Debug/netstandard2.0
+/AcrossSystems/DatabaseRepository/obj
